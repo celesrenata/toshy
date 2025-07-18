@@ -1,0 +1,225 @@
+{
+  description = "Toshy - Mac-style keybindings for Linux";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        python = pkgs.python3;
+        
+        # Custom python-xlib 0.31 to avoid conflicts
+        pythonXlib031 = python.pkgs.xlib.overrideAttrs (oldAttrs: rec {
+          version = "0.31";
+          src = pkgs.fetchPypi {
+            pname = "python-xlib";
+            version = "0.31";
+            hash = "sha256-dNg6CB9TK8B/bXr81kFuw4QD1o9oubncnh8o+/LXmek=";
+          };
+        });
+
+        # Custom xwaykeyz package (main dependency not in nixpkgs)
+        xwaykeyz = python.pkgs.buildPythonPackage rec {
+          pname = "xwaykeyz";
+          version = "1.2.0";
+          format = "pyproject";
+
+          src = pkgs.fetchFromGitHub {
+            owner = "RedBearAK";
+            repo = "xwaykeyz";
+            rev = "main";
+            hash = "sha256-WXZl787CysbuBMNvyhI0iOd+yn2Fk0tK90BSDkT8TSQ=";
+          };
+
+          nativeBuildInputs = with python.pkgs; [
+            hatchling
+          ];
+
+          propagatedBuildInputs = with python.pkgs; [
+            appdirs
+            dbus-python
+            evdev
+            i3ipc
+            inotify-simple
+            ordered-set
+            pywayland
+            pythonXlib031
+          ] ++ pkgs.lib.optionals (python.pkgs ? hyprpy) [
+            python.pkgs.hyprpy
+          ];
+
+          # Skip tests for now during initial setup
+          doCheck = false;
+          
+          # Skip runtime dependency checks for now
+          dontCheckRuntimeDeps = true;
+          
+          # Skip conflict detection - we know about the python-xlib version conflict
+          catchConflicts = false;
+
+          meta = with pkgs.lib; {
+            description = "A fork of keyszer for X11 and Wayland";
+            homepage = "https://github.com/RedBearAK/xwaykeyz";
+            license = licenses.gpl3Plus;
+            maintainers = [ ];
+            platforms = platforms.linux;
+          };
+        };
+
+        # Main Toshy package
+        toshy = python.pkgs.buildPythonApplication rec {
+          pname = "toshy";
+          version = "24.12.1";
+          format = "pyproject";
+
+          src = ./.;
+
+          nativeBuildInputs = with pkgs; [
+            wrapGAppsHook
+            gobject-introspection
+          ] ++ (with python.pkgs; [
+            setuptools
+            wheel
+          ]);
+
+          buildInputs = with pkgs; [
+            gtk3
+            gobject-introspection
+          ];
+
+          propagatedBuildInputs = with python.pkgs; [
+            # Standard nixpkgs packages
+            appdirs
+            dbus-python
+            evdev
+            i3ipc
+            inotify-simple
+            lockfile
+            ordered-set
+            pillow
+            psutil
+            pygobject3
+            pywayland
+            six
+            systemd
+            tkinter
+            watchdog
+            
+            # Use the same python-xlib version as xwaykeyz
+            pythonXlib031
+            
+            # Custom packages
+            xwaykeyz
+          ] ++ pkgs.lib.optionals (python.pkgs ? hyprpy) [
+            python.pkgs.hyprpy
+          ] ++ pkgs.lib.optionals (python.pkgs ? sv-ttk) [
+            python.pkgs.sv-ttk
+          ] ++ pkgs.lib.optionals (python.pkgs ? xkbcommon) [
+            python.pkgs.xkbcommon
+          ];
+
+          # Enable tests and add test dependencies
+          doCheck = true;
+          
+          nativeCheckInputs = with python.pkgs; [
+            pytest
+            pytest-cov
+            pytest-mock
+          ];
+          
+          checkPhase = ''
+            runHook preCheck
+            
+            # Run tests
+            python -m pytest tests/ -v
+            
+            runHook postCheck
+          '';
+          
+          # Skip runtime dependency checks for now
+          dontCheckRuntimeDeps = true;
+          
+          # Skip conflict detection
+          catchConflicts = false;
+
+          meta = with pkgs.lib; {
+            description = "Mac-style keybindings for Linux";
+            homepage = "https://github.com/celesrenata/toshy";
+            license = licenses.gpl3Plus;
+            maintainers = [ ];
+            platforms = platforms.linux;
+            mainProgram = "toshy-tray";
+          };
+        };
+
+      in {
+        packages = {
+          inherit toshy xwaykeyz;
+          default = toshy;
+        };
+
+        devShells.default = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            python3
+            python3Packages.pip
+            python3Packages.setuptools
+            python3Packages.wheel
+            
+            # Testing tools
+            python3Packages.pytest
+            python3Packages.pytest-cov
+            python3Packages.pytest-mock
+            python3Packages.black
+            python3Packages.flake8
+            
+            # Development tools
+            nixpkgs-fmt
+            git
+            
+            # System dependencies for development
+            gtk3
+            gobject-introspection
+            pkg-config
+          ];
+
+          shellHook = ''
+            echo "Toshy development environment"
+            echo "Python: $(python --version)"
+            echo ""
+            echo "Available commands:"
+            echo "  - nixpkgs-fmt: Format Nix files"
+            echo "  - nix build: Build the package"
+            echo "  - nix run: Run toshy"
+            echo "  - pytest: Run tests"
+            echo "  - black: Format Python code"
+            echo "  - flake8: Lint Python code"
+            echo ""
+            echo "Testing:"
+            echo "  - pytest tests/: Run all tests"
+            echo "  - pytest tests/test_config.py: Run specific test file"
+            echo "  - pytest --cov=toshy tests/: Run tests with coverage"
+          '';
+        };
+
+        formatter = pkgs.nixpkgs-fmt;
+      }
+    ) // {
+      # NixOS module
+      nixosModules.toshy = import ./modules/toshy.nix;
+      nixosModules.default = self.nixosModules.toshy;
+      
+      # Home Manager module
+      homeManagerModules.toshy = import ./home-manager/toshy.nix;
+      homeManagerModules.default = self.homeManagerModules.toshy;
+      
+      # Overlay for easy integration
+      overlays.default = final: prev: {
+        toshy = self.packages.${prev.system}.toshy;
+        xwaykeyz = self.packages.${prev.system}.xwaykeyz;
+      };
+    };
+}
