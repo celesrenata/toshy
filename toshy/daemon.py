@@ -15,7 +15,7 @@ from .platform_utils import get_platform_detector
 
 # Import xwaykeyz as a module instead of calling it as subprocess
 try:
-    import xwaykeyz.main
+    import xwaykeyz.cli
     XWAYKEYZ_AVAILABLE = True
 except ImportError:
     XWAYKEYZ_AVAILABLE = False
@@ -191,7 +191,7 @@ def main():
             
             try:
                 # Call xwaykeyz main function directly
-                xwaykeyz.main.main()
+                xwaykeyz.cli.main()
             finally:
                 # Restore original argv
                 sys.argv = original_argv
