@@ -361,7 +361,7 @@ in {
         # XDG_RUNTIME_DIR is automatically set by systemd for user services
         
         # Add procps to PATH for pgrep/pkill commands needed by configuration
-        PATH = "${pkgs.procps}/bin:/etc/profiles/per-user/${cfg.user}/bin:/run/current-system/sw/bin";
+        PATH = mkForce "${pkgs.procps}/bin:/etc/profiles/per-user/${cfg.user}/bin:/run/current-system/sw/bin";
       } // optionalAttrs cfg.wayland.enable {
         WAYLAND_DISPLAY = "wayland-1";  # Match actual socket name
         XDG_SESSION_TYPE = "wayland";
