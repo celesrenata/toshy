@@ -13,6 +13,14 @@ import signal
 from pathlib import Path
 from .platform_utils import get_platform_detector
 
+# Import xwaykeyz as a module instead of calling it as subprocess
+try:
+    import xwaykeyz.main
+    XWAYKEYZ_AVAILABLE = True
+except ImportError:
+    XWAYKEYZ_AVAILABLE = False
+    print("Warning: xwaykeyz module not available, falling back to subprocess", file=sys.stderr)
+
 def find_config_file():
     """Find the Toshy configuration file"""
     # Standard locations to check for config file
@@ -118,15 +126,19 @@ def main():
         print("Running in compatibility mode for this platform")
     
     # Check if xwaykeyz is available
-    try:
-        result = subprocess.run(['xwaykeyz', '--version'], 
-                              capture_output=True, 
-                              timeout=5)
-        if result.returncode != 0:
-            raise FileNotFoundError
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        print("Error: xwaykeyz command not found. Please ensure xwaykeyz is installed.", file=sys.stderr)
-        sys.exit(1)
+    if not XWAYKEYZ_AVAILABLE:
+        # Fallback to subprocess check
+        try:
+            result = subprocess.run(['xwaykeyz', '--version'], 
+                                  capture_output=True, 
+                                  timeout=5)
+            if result.returncode != 0:
+                raise FileNotFoundError
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            print("Error: xwaykeyz not available as module or command. Please ensure xwaykeyz is installed.", file=sys.stderr)
+            sys.exit(1)
+    else:
+        print("xwaykeyz module available - using integrated execution")
     
     # Find configuration file
     config_file = find_config_file()
@@ -156,33 +168,61 @@ def main():
         Path(marker_file).touch()
     
     # Start xwaykeyz with the configuration
-    cmd = ['xwaykeyz', '-w', '-c', config_file]
-    
-    print(f"Starting: {' '.join(cmd)}")
+    print(f"Using configuration file: {config_file}")
     
     try:
-        # Run xwaykeyz and wait for it to complete
-        process = subprocess.Popen(cmd)
-        
-        def signal_handler(signum, frame):
-            print(f"Received signal {signum}, shutting down...")
-            process.terminate()
+        if XWAYKEYZ_AVAILABLE:
+            # Use xwaykeyz as a Python module (preferred method)
+            # This ensures the configuration runs in the same Python environment
+            print("Starting xwaykeyz as Python module...")
+            
+            # Set up signal handlers for graceful shutdown
+            def signal_handler(signum, frame):
+                print(f"Received signal {signum}, shutting down...")
+                sys.exit(0)
+            
+            signal.signal(signal.SIGTERM, signal_handler)
+            signal.signal(signal.SIGINT, signal_handler)
+            
+            # Prepare arguments for xwaykeyz
+            # Simulate command line: xwaykeyz -w -c config_file
+            original_argv = sys.argv.copy()
+            sys.argv = ['xwaykeyz', '-w', '-c', config_file]
+            
             try:
-                process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                process.kill()
-            sys.exit(0)
-        
-        # Set up signal handlers for graceful shutdown
-        signal.signal(signal.SIGTERM, signal_handler)
-        signal.signal(signal.SIGINT, signal_handler)
-        
-        # Wait for the process to complete
-        return_code = process.wait()
-        
-        if return_code != 0:
-            print(f"xwaykeyz exited with code {return_code}", file=sys.stderr)
-            sys.exit(return_code)
+                # Call xwaykeyz main function directly
+                xwaykeyz.main.main()
+            finally:
+                # Restore original argv
+                sys.argv = original_argv
+                
+        else:
+            # Fallback to subprocess method
+            cmd = ['xwaykeyz', '-w', '-c', config_file]
+            print(f"Starting: {' '.join(cmd)}")
+            
+            # Run xwaykeyz and wait for it to complete
+            process = subprocess.Popen(cmd)
+            
+            def signal_handler(signum, frame):
+                print(f"Received signal {signum}, shutting down...")
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                sys.exit(0)
+            
+            # Set up signal handlers for graceful shutdown
+            signal.signal(signal.SIGTERM, signal_handler)
+            signal.signal(signal.SIGINT, signal_handler)
+            
+            # Wait for the process to complete
+            return_code = process.wait()
+            
+            if return_code != 0:
+                print(f"xwaykeyz exited with code {return_code}", file=sys.stderr)
+                sys.exit(return_code)
             
     except KeyboardInterrupt:
         print("Interrupted by user")
