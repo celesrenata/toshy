@@ -475,8 +475,50 @@ class ToolsPanel(Gtk.Box):
         debug(f"Opening config folder: {config_path}")
         
         try:
-            # Use xdg-open to open the folder in the default file manager
-            subprocess.Popen(['xdg-open', config_path])
+            # Try multiple approaches to open the folder
+            import os
+            if not os.path.exists(config_path):
+                error_msg = f"Config folder does not exist: {config_path}"
+                debug(error_msg)
+                self.ntfy.send_notification(error_msg)
+                return
+            
+            # Try xdg-open first (most universal)
+            try:
+                result = subprocess.run(['xdg-open', config_path], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    debug("Successfully opened config folder with xdg-open")
+                    return
+                else:
+                    debug(f"xdg-open failed: {result.stderr}")
+            except Exception as e:
+                debug(f"xdg-open failed: {e}")
+            
+            # Try desktop-specific file managers
+            file_managers = [
+                ['nautilus', config_path],      # GNOME
+                ['dolphin', config_path],       # KDE
+                ['thunar', config_path],        # XFCE
+                ['pcmanfm', config_path],       # LXDE
+                ['nemo', config_path],          # Cinnamon
+            ]
+            
+            for fm_cmd in file_managers:
+                try:
+                    subprocess.Popen(fm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    debug(f"Successfully opened config folder with {fm_cmd[0]}")
+                    return
+                except FileNotFoundError:
+                    continue
+                except Exception as e:
+                    debug(f"Failed to open with {fm_cmd[0]}: {e}")
+                    continue
+            
+            # Last resort: show path in notification
+            self.ntfy.send_notification(f"Config folder: {config_path}")
+            debug("Showed config path in notification as fallback")
+            
         except Exception as e:
             error_msg = f"Failed to open config folder: {e}"
             debug(error_msg)
@@ -489,10 +531,22 @@ class ToolsPanel(Gtk.Box):
             return
             
         try:
-            term_utils.run_cmd_lst_in_terminal(['toshy-services-log'], desktop_env=self.desktop_env)
+            # Use journalctl to show Toshy service logs
+            cmd = [
+                'journalctl', '--user', 
+                '-u', 'toshy', '-u', 'toshy-gui', '-u', 'toshy-tray',
+                '--since', '1 hour ago',
+                '-f'  # Follow logs
+            ]
+            debug(f"Opening service logs with command: {' '.join(cmd)}")
+            term_utils.run_cmd_lst_in_terminal(cmd, desktop_env=self.desktop_env)
         except term_utils.TerminalNotFoundError as e:
             debug(f"Terminal error: {e}")
             self.ntfy.send_notification(str(e))
+        except Exception as e:
+            error_msg = f"Failed to show service logs: {e}"
+            debug(error_msg)
+            self.ntfy.send_notification(error_msg)
             
     def load_settings(self):
         """Load settings from config and update controls (called by external monitoring)"""

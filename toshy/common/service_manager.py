@@ -47,25 +47,32 @@ class ServiceManager:
         """
         (Re)Start Toshy services with systemd commands.
         
-        Starts the main toshy daemon service.
+        Starts the main toshy daemon service (NOT the GUI to avoid closing ourselves).
         Shows notification if notification manager is available.
         """
         try:
-            debug("Starting Toshy services with systemd...")
+            debug("Starting Toshy daemon service with systemd...")
             
-            # Restart the main toshy service
+            # Only restart the main toshy daemon service
+            # DO NOT restart toshy-gui as that would close the current GUI instance
             result = subprocess.run([
                 self.systemctl_cmd, "--user", "restart", "toshy"
             ], capture_output=True, text=True, timeout=10)
             
             if result.returncode == 0:
-                message = 'Toshy systemd service (re)started.'
+                message = 'Toshy daemon service (re)started.'
                 debug(message)
                 if self.ntfy:
                     self.ntfy.send_notification(message, self.icon_active)
             else:
-                raise subprocess.CalledProcessError(result.returncode, result.args, result.stderr)
+                error_output = result.stderr or result.stdout or "Unknown error"
+                raise subprocess.CalledProcessError(result.returncode, result.args, error_output)
                 
+        except subprocess.TimeoutExpired:
+            message = "Timeout while starting Toshy services"
+            error(message)
+            if self.ntfy:
+                self.ntfy.send_notification(message, self.icon_grayscale)
         except Exception as e:
             message = f"Failed to start Toshy services: {e}"
             error(message)
@@ -248,3 +255,13 @@ class ServiceManager:
                 debug(f"Command not found: {name}")
                 
         return status
+    
+    def restart_config_only(self):
+        """
+        Restart only the config service (same as main service for now).
+        
+        This is a placeholder for future config-only service functionality.
+        Currently just restarts the main toshy service.
+        """
+        debug("Config-only restart requested - using main service restart")
+        return self.restart_services()
