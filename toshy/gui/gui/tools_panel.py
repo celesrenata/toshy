@@ -483,32 +483,21 @@ class ToolsPanel(Gtk.Box):
                 print(f"ERROR: {error_msg}")
                 return
             
-            # Get configured file manager from environment (default to xdg-open)
-            preferred_fm = os.environ.get('TOSHY_FILE_MANAGER', 'xdg-open')
-            debug(f"Using file manager: {preferred_fm}")
+            # Get configured file manager from environment (default to thunar)
+            preferred_fm = os.environ.get('TOSHY_FILE_MANAGER', 'thunar')
+            debug(f"Using configured file manager: {preferred_fm}")
             
-            # Use async approach to avoid freezing the GUI
+            # Use the configured file manager directly
             try:
-                if preferred_fm == 'xdg-open':
-                    # Use xdg-open with short timeout and async
-                    debug(f"Opening config folder with xdg-open (async)")
-                    subprocess.Popen(['xdg-open', config_path], 
-                                   stdout=subprocess.DEVNULL, 
-                                   stderr=subprocess.DEVNULL,
-                                   start_new_session=True)
-                    debug("Successfully launched xdg-open")
-                    return
-                else:
-                    # Use specified file manager (async)
-                    debug(f"Opening config folder with {preferred_fm} (async)")
-                    subprocess.Popen([preferred_fm, config_path], 
-                                   stdout=subprocess.DEVNULL, 
-                                   stderr=subprocess.DEVNULL,
-                                   start_new_session=True)
-                    debug(f"Successfully launched {preferred_fm}")
-                    return
+                debug(f"Opening config folder with {preferred_fm}")
+                subprocess.Popen([preferred_fm, config_path], 
+                               stdout=subprocess.DEVNULL, 
+                               stderr=subprocess.DEVNULL,
+                               start_new_session=True)
+                debug(f"Successfully launched {preferred_fm}")
+                return
             except Exception as e:
-                debug(f"Failed to open with {preferred_fm}: {e}")
+                debug(f"Failed to launch {preferred_fm}: {e}")
             
             # Fallback: print path to console
             print(f"Config folder: {config_path}")
