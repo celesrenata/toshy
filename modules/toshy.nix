@@ -413,8 +413,13 @@ in {
         DISPLAY = ":0";
         XDG_RUNTIME_DIR = "/run/user/%i";
         TOSHY_THEME = cfg.gui.theme;
+        # Wayland display for GTK4
+        WAYLAND_DISPLAY = "wayland-1";
+        XDG_SESSION_TYPE = "wayland";
+        # GTK4 backend preference
+        GDK_BACKEND = "wayland,x11";
       } // optionalAttrs cfg.wayland.enable {
-        WAYLAND_DISPLAY = "wayland-0";
+        WAYLAND_DISPLAY = "wayland-1";
       };
     };
     
