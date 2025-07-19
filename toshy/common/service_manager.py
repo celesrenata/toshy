@@ -37,47 +37,69 @@ class ServiceManager:
         self.home_dir = os.path.expanduser("~")
         self.home_local_bin = os.path.join(self.home_dir, '.local', 'bin')
         
-        # CLI command paths
-        self.toshy_svcs_restart_cmd     = os.path.join(self.home_local_bin, 'toshy-services-restart')
-        self.toshy_svcs_stop_cmd        = os.path.join(self.home_local_bin, 'toshy-services-stop')
-        self.toshy_cfg_restart_cmd      = os.path.join(self.home_local_bin, 'toshy-config-restart')
-        self.toshy_cfg_stop_cmd         = os.path.join(self.home_local_bin, 'toshy-config-stop')
+        # Modern systemd commands instead of old shell scripts
+        self.systemctl_cmd = "systemctl"
+        
+        # Service names
+        self.toshy_services = ["toshy", "toshy-gui", "toshy-tray"]
 
     def restart_services(self):
         """
-        (Re)Start Toshy services with CLI command.
+        (Re)Start Toshy services with systemd commands.
         
-        Starts both the config service and session monitor service.
+        Starts the main toshy daemon service.
         Shows notification if notification manager is available.
         """
         try:
-            debug("Starting Toshy services...")
-            subprocess.Popen([self.toshy_svcs_restart_cmd], stdout=DEVNULL, stderr=DEVNULL)
-            time.sleep(3)
+            debug("Starting Toshy services with systemd...")
             
-            message = 'Toshy systemd services (re)started.'
-            if self.ntfy:
-                self.ntfy.send_notification(message, self.icon_active)
+            # Restart the main toshy service
+            result = subprocess.run([
+                self.systemctl_cmd, "--user", "restart", "toshy"
+            ], capture_output=True, text=True, timeout=10)
+            
+            if result.returncode == 0:
+                message = 'Toshy systemd service (re)started.'
+                debug(message)
+                if self.ntfy:
+                    self.ntfy.send_notification(message, self.icon_active)
+            else:
+                raise subprocess.CalledProcessError(result.returncode, result.args, result.stderr)
                 
-            debug(message)
-            
         except Exception as e:
-            message = (f"Failed to start Toshy services: {e}")
+            message = f"Failed to start Toshy services: {e}"
             error(message)
             if self.ntfy:
                 self.ntfy.send_notification(message, self.icon_grayscale)
 
     def stop_services(self):
         """
-        Stop Toshy services with CLI command.
+        Stop Toshy services with systemd commands.
         
-        Stops both the config service and session monitor service.
+        Stops the main toshy daemon service.
         Shows notification if notification manager is available.
         """
         try:
-            debug("Stopping Toshy services...")
-            subprocess.Popen([self.toshy_svcs_stop_cmd], stdout=DEVNULL, stderr=DEVNULL)
-            time.sleep(3)
+            debug("Stopping Toshy services with systemd...")
+            
+            # Stop the main toshy service
+            result = subprocess.run([
+                self.systemctl_cmd, "--user", "stop", "toshy"
+            ], capture_output=True, text=True, timeout=10)
+            
+            if result.returncode == 0:
+                message = 'Toshy systemd service stopped.'
+                debug(message)
+                if self.ntfy:
+                    self.ntfy.send_notification(message, self.icon_grayscale)
+            else:
+                raise subprocess.CalledProcessError(result.returncode, result.args, result.stderr)
+                
+        except Exception as e:
+            message = f"Failed to stop Toshy services: {e}"
+            error(message)
+            if self.ntfy:
+                self.ntfy.send_notification(message, self.icon_grayscale)
             
             message = 'Toshy systemd services stopped.'
             if self.ntfy:
@@ -210,22 +232,19 @@ class ServiceManager:
 
     def check_commands_exist(self):
         """
-        Check if all required CLI commands exist.
+        Check if systemctl command exists.
         
         Returns:
-            dict: Status of each command (True if exists, False otherwise)
+            dict: Status of systemctl command
         """
         commands = {
-            'toshy-services-restart': self.toshy_svcs_restart_cmd,
-            'toshy-services-stop': self.toshy_svcs_stop_cmd,
-            'toshy-config-restart': self.toshy_cfg_restart_cmd,
-            'toshy-config-stop': self.toshy_cfg_stop_cmd,
+            'systemctl': shutil.which(self.systemctl_cmd) is not None,
         }
         
         status = {}
-        for name, path in commands.items():
-            status[name] = os.path.exists(path) and os.access(path, os.X_OK)
+        for name, available in commands.items():
+            status[name] = available
             if not status[name]:
-                debug(f"Command not found or not executable: {path}")
+                debug(f"Command not found: {name}")
                 
         return status
