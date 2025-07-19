@@ -398,10 +398,10 @@ in {
         # Add notify-send to PATH
         Environment = "PATH=${pkgs.libnotify}/bin:${pkgs.procps}/bin:${pkgs.coreutils}/bin:/etc/profiles/per-user/${cfg.user}/bin:/run/current-system/sw/bin";
         
-        # Security settings
-        NoNewPrivileges = true;
-        PrivateTmp = true;
-        ProtectSystem = "strict";
+        # Security settings - relaxed for GUI
+        NoNewPrivileges = false;  # GTK4 needs this
+        PrivateTmp = false;       # GTK4 needs access to tmp
+        ProtectSystem = "false";  # GTK4 needs system access
         ProtectHome = false;
         
         # Runtime directories for GTK4
