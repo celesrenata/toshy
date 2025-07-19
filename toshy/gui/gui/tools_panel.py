@@ -480,7 +480,8 @@ class ToolsPanel(Gtk.Box):
             if not os.path.exists(config_path):
                 error_msg = f"Config folder does not exist: {config_path}"
                 debug(error_msg)
-                self.ntfy.send_notification(error_msg)
+                # Use simple print instead of notification to avoid crashes
+                print(f"ERROR: {error_msg}")
                 return
             
             # Try xdg-open first (most universal)
@@ -502,6 +503,7 @@ class ToolsPanel(Gtk.Box):
                 ['thunar', config_path],        # XFCE
                 ['pcmanfm', config_path],       # LXDE
                 ['nemo', config_path],          # Cinnamon
+                ['ranger', config_path],        # Terminal file manager
             ]
             
             for fm_cmd in file_managers:
@@ -515,14 +517,14 @@ class ToolsPanel(Gtk.Box):
                     debug(f"Failed to open with {fm_cmd[0]}: {e}")
                     continue
             
-            # Last resort: show path in notification
-            self.ntfy.send_notification(f"Config folder: {config_path}")
-            debug("Showed config path in notification as fallback")
+            # Last resort: print path to console
+            print(f"Config folder: {config_path}")
+            debug("Showed config path in console as fallback")
             
         except Exception as e:
             error_msg = f"Failed to open config folder: {e}"
             debug(error_msg)
-            self.ntfy.send_notification(error_msg)
+            print(f"ERROR: {error_msg}")
             
     def on_show_services_log(self, button):
         """Handle show services log button click"""
@@ -539,14 +541,42 @@ class ToolsPanel(Gtk.Box):
                 '-f'  # Follow logs
             ]
             debug(f"Opening service logs with command: {' '.join(cmd)}")
-            term_utils.run_cmd_lst_in_terminal(cmd, desktop_env=self.desktop_env)
+            
+            # Try to open in terminal
+            success = term_utils.run_cmd_lst_in_terminal(cmd, desktop_env=self.desktop_env)
+            
+            if not success:
+                # Fallback: show recent logs without following
+                debug("Terminal launch failed, trying fallback log display")
+                fallback_cmd = [
+                    'journalctl', '--user', 
+                    '-u', 'toshy', '-u', 'toshy-gui', '-u', 'toshy-tray',
+                    '--since', '1 hour ago',
+                    '--no-pager'
+                ]
+                
+                # Try to show in a simple terminal without following
+                if not term_utils.run_cmd_lst_in_terminal(fallback_cmd, desktop_env=self.desktop_env):
+                    # Last resort: print to console
+                    debug("All terminal attempts failed, showing logs in console")
+                    try:
+                        result = subprocess.run(fallback_cmd, capture_output=True, text=True, timeout=10)
+                        if result.returncode == 0:
+                            print("=== TOSHY SERVICE LOGS ===")
+                            print(result.stdout)
+                            print("=== END LOGS ===")
+                        else:
+                            print(f"Failed to get logs: {result.stderr}")
+                    except Exception as e:
+                        print(f"Failed to get logs: {e}")
+                        
         except term_utils.TerminalNotFoundError as e:
             debug(f"Terminal error: {e}")
-            self.ntfy.send_notification(str(e))
+            print(f"Terminal not found: {e}")
         except Exception as e:
             error_msg = f"Failed to show service logs: {e}"
             debug(error_msg)
-            self.ntfy.send_notification(error_msg)
+            print(f"ERROR: {error_msg}")
             
     def load_settings(self):
         """Load settings from config and update controls (called by external monitoring)"""

@@ -47,7 +47,7 @@ def run_cmd_lst_in_terminal(command_list, desktop_env: str=None):
     """
     Execute a command in the most appropriate terminal emulator.
     
-    Tries to find a matching terminal for the desktop environment first,
+    Tries to find the default terminal first, then DE-specific terminals,
     then falls back to any available terminal.
     
     Args:
@@ -76,14 +76,45 @@ def run_cmd_lst_in_terminal(command_list, desktop_env: str=None):
 
         full_command = [terminal_path] + args_list + command_list
         try:
-            subprocess.Popen(full_command)
+            subprocess.Popen(full_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             debug(f"Successfully launched command in {terminal_cmd}")
             return True
         except subprocess.SubprocessError as e:
             debug(f'Error launching {terminal_cmd}: {e}')
             return False
 
-    # First pass: Try DE-specific terminals if desktop_env is provided
+    # First: Try to get the default terminal from environment/session
+    default_terminals = []
+    
+    # Check TERMINAL environment variable
+    if os.environ.get('TERMINAL'):
+        default_terminals.append((os.environ['TERMINAL'], ['-e'], []))
+        debug(f"Found TERMINAL env var: {os.environ['TERMINAL']}")
+    
+    # Check x-terminal-emulator (Debian/Ubuntu default)
+    if shutil.which('x-terminal-emulator'):
+        default_terminals.append(('x-terminal-emulator', ['-e'], []))
+        debug("Found x-terminal-emulator")
+    
+    # Check for common Wayland terminals first (since you use foot)
+    wayland_terminals = [
+        ('foot', ['-e'], []),
+        ('alacritty', ['-e'], []),
+        ('kitty', ['-e'], []),
+        ('wezterm', ['start', '--'], []),
+    ]
+    
+    # Try default terminals first
+    for terminal_cmd, args_list, _ in default_terminals:
+        if _try_terminal(terminal_cmd, args_list):
+            return True
+    
+    # Try Wayland terminals (modern, likely to work better)
+    for terminal_cmd, args_list, _ in wayland_terminals:
+        if _try_terminal(terminal_cmd, args_list):
+            return True
+
+    # Second pass: Try DE-specific terminals if desktop_env is provided
     if desktop_env:
         desktop_env = desktop_env.casefold()
         for terminal_cmd, args_list, de_list in TERMINAL_APPS:
@@ -91,8 +122,11 @@ def run_cmd_lst_in_terminal(command_list, desktop_env: str=None):
                 if _try_terminal(terminal_cmd, args_list):
                     return True
 
-    # Second pass: Try any available terminal
+    # Third pass: Try any available terminal (excluding problematic ones)
     for terminal_cmd, args_list, _ in TERMINAL_APPS:
+        # Skip terminology as it's been crashing
+        if terminal_cmd == 'terminology':
+            continue
         if _try_terminal(terminal_cmd, args_list):
             return True
 
