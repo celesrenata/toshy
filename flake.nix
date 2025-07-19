@@ -134,8 +134,7 @@
             pywayland
             six
             systemd
-            tkinter
-            watchdog
+            watchdog  # File system monitoring
             
             # Use the same python-xlib version as xwaykeyz
             pythonXlib031
