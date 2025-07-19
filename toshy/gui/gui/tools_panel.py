@@ -487,47 +487,73 @@ class ToolsPanel(Gtk.Box):
             preferred_fm = os.environ.get('TOSHY_FILE_MANAGER', 'thunar')
             debug(f"Preferred file manager from config: {preferred_fm}")
             
-            # Try the configured file manager first
+            # Use system paths for known file managers to avoid Nix wrapper issues
+            system_paths = {
+                'thunar': '/run/current-system/sw/bin/thunar',
+                'nautilus': '/run/current-system/sw/bin/nautilus',
+                'dolphin': '/run/current-system/sw/bin/dolphin',
+                'pcmanfm': '/run/current-system/sw/bin/pcmanfm',
+                'nemo': '/run/current-system/sw/bin/nemo',
+                'caja': '/run/current-system/sw/bin/caja',
+            }
+            
+            # Try the configured file manager first using system path
+            if preferred_fm in system_paths:
+                system_path = system_paths[preferred_fm]
+                if os.path.exists(system_path):
+                    try:
+                        debug(f"Trying configured file manager at system path: {system_path}")
+                        subprocess.Popen([system_path, config_path], 
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        debug(f"Successfully launched {preferred_fm} from system path")
+                        return
+                    except Exception as e:
+                        debug(f"Failed to launch {preferred_fm} from system path: {e}")
+                else:
+                    debug(f"System path {system_path} does not exist")
+            
+            # Fallback: try shutil.which for the configured file manager
             if shutil.which(preferred_fm):
                 try:
-                    debug(f"Trying configured file manager: {preferred_fm}")
+                    debug(f"Trying configured file manager via which: {preferred_fm}")
                     subprocess.Popen([preferred_fm, config_path], 
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    debug(f"Successfully launched {preferred_fm}")
+                    debug(f"Successfully launched {preferred_fm} via which")
                     return
                 except Exception as e:
-                    debug(f"Failed to launch {preferred_fm}: {e}")
-            else:
-                debug(f"Configured file manager {preferred_fm} not found")
+                    debug(f"Failed to launch {preferred_fm} via which: {e}")
             
-            # Fallback to other GUI file managers
-            file_managers = [
-                'nautilus',     # GNOME
-                'dolphin',      # KDE
-                'thunar',       # XFCE
-                'pcmanfm',      # LXDE
-                'nemo',         # Cinnamon
-                'caja',         # MATE
-            ]
+            # Fallback to other file managers using system paths first
+            fallback_managers = ['thunar', 'nautilus', 'dolphin', 'pcmanfm', 'nemo', 'caja']
+            if preferred_fm in fallback_managers:
+                fallback_managers.remove(preferred_fm)
             
-            # Remove the preferred one from fallbacks to avoid trying twice
-            if preferred_fm in file_managers:
-                file_managers.remove(preferred_fm)
-            
-            for fm in file_managers:
-                try:
-                    if not shutil.which(fm):
-                        debug(f"File manager {fm} not found")
+            for fm in fallback_managers:
+                # Try system path first
+                if fm in system_paths:
+                    system_path = system_paths[fm]
+                    if os.path.exists(system_path):
+                        try:
+                            debug(f"Trying fallback file manager at system path: {system_path}")
+                            subprocess.Popen([system_path, config_path], 
+                                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                            debug(f"Successfully launched {fm} from system path")
+                            return
+                        except Exception as e:
+                            debug(f"Failed to launch {fm} from system path: {e}")
+                            continue
+                
+                # Try via which as fallback
+                if shutil.which(fm):
+                    try:
+                        debug(f"Trying fallback file manager via which: {fm}")
+                        subprocess.Popen([fm, config_path], 
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        debug(f"Successfully launched {fm} via which")
+                        return
+                    except Exception as e:
+                        debug(f"Failed to launch {fm} via which: {e}")
                         continue
-                        
-                    debug(f"Trying fallback file manager: {fm}")
-                    subprocess.Popen([fm, config_path], 
-                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    debug(f"Successfully launched {fm}")
-                    return
-                except Exception as e:
-                    debug(f"Failed to launch {fm}: {e}")
-                    continue
             
             # If no GUI file managers worked, try xdg-open
             debug("No GUI file managers found, trying xdg-open")
