@@ -117,6 +117,7 @@
             libappindicator-gtk3  # For system tray support
             libayatana-appindicator # Alternative AppIndicator implementation
             libnotify # For notify-send command
+            procps # For pgrep, pkill commands
           ];
 
           propagatedBuildInputs = with python.pkgs; [
