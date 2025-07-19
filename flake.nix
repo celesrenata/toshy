@@ -106,6 +106,7 @@
           nativeBuildInputs = with pkgs; [
             wrapGAppsHook
             gobject-introspection
+            procps # For pgrep, pkill commands needed by configuration
           ] ++ (with python.pkgs; [
             setuptools
             wheel
@@ -117,7 +118,6 @@
             libappindicator-gtk3  # For system tray support
             libayatana-appindicator # Alternative AppIndicator implementation
             libnotify # For notify-send command
-            procps # For pgrep, pkill commands
           ];
 
           propagatedBuildInputs = with python.pkgs; [
