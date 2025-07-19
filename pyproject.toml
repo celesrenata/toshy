@@ -78,7 +78,8 @@ Documentation = "https://github.com/celesrenata/toshy/wiki"
 
 [project.scripts]
 toshy-tray = "toshy.tray:main"
-toshy-gui = "toshy.layout_selector:main"
+toshy-gui = "toshy.gui.__main__:main"
+toshy-layout-selector = "toshy.layout_selector:main"
 toshy-config = "toshy.config:main"
 toshy-daemon = "toshy.daemon:main"
 toshy-config-generator = "toshy.config_generator:main"

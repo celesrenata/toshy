@@ -9,7 +9,7 @@ Usage:
 """
 
 import argparse
-from toshy_common.logger import debug
+from toshy.common.logger import debug
 
 
 def main():
@@ -24,8 +24,8 @@ def main():
     args = parser.parse_args()
     
     if args.verbose:
-        import toshy_common.logger
-        toshy_common.logger.VERBOSE = True
+        import toshy.common.logger
+        toshy.common.logger.VERBOSE = True
     
     if True is False: pass
     elif args.gtk4:

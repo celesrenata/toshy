@@ -68,24 +68,24 @@ GLib.log_set_handler("Gtk", GLib.LogLevelFlags.LEVEL_WARNING, null_log_handler, 
 GLib.log_set_handler("Adwaita", GLib.LogLevelFlags.LEVEL_WARNING, null_log_handler, None)
 
 # Initialize Toshy runtime before other imports
-from toshy_common.runtime_utils import initialize_toshy_runtime
+from toshy.common.runtime_utils import initialize_toshy_runtime
 runtime = initialize_toshy_runtime()
 
 # Business logic imports (unchanged from tkinter version)
 from toshy_common import logger
-from toshy_common.logger import *
-from toshy_common.env_context import EnvironmentInfo
-from toshy_common.settings_class import Settings
-from toshy_common.notification_manager import NotificationManager
-from toshy_common.process_manager import ProcessManager
-from toshy_common.service_manager import ServiceManager
-from toshy_common.monitoring import SettingsMonitor, ServiceMonitor
+from toshy.common.logger import *
+from toshy.common.env_context import EnvironmentInfo
+from toshy.common.settings_class import Settings
+from toshy.common.notification_manager import NotificationManager
+from toshy.common.process_manager import ProcessManager
+from toshy.common.service_manager import ServiceManager
+from toshy.common.monitoring import SettingsMonitor, ServiceMonitor
 
 # Local GUI components
-from toshy_gui.gui.service_panel_gtk4 import ServicePanel
-from toshy_gui.gui.settings_panel_gtk4 import SettingsPanel
-from toshy_gui.gui.tools_panel import ToolsPanel
-from toshy_gui.gui.bottom_panel_gtk4 import BottomPanel
+from toshy.gui.gui.service_panel_gtk4 import ServicePanel
+from toshy.gui.gui.settings_panel_gtk4 import SettingsPanel
+from toshy.gui.gui.tools_panel import ToolsPanel
+from toshy.gui.gui.bottom_panel_gtk4 import BottomPanel
 
 # Make process manager global
 process_mgr = None
