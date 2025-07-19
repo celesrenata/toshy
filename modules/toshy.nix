@@ -137,9 +137,9 @@ in {
       
       fileManager = mkOption {
         type = types.str;
-        default = "thunar";
+        default = "xdg-open";
         description = "Default file manager for opening config folder";
-        example = "nautilus";
+        example = "thunar";
       };
     };
     

@@ -483,94 +483,35 @@ class ToolsPanel(Gtk.Box):
                 print(f"ERROR: {error_msg}")
                 return
             
-            # Check for configured file manager from environment
-            preferred_fm = os.environ.get('TOSHY_FILE_MANAGER', 'thunar')
-            debug(f"Preferred file manager from config: {preferred_fm}")
+            # Get configured file manager from environment (default to xdg-open)
+            preferred_fm = os.environ.get('TOSHY_FILE_MANAGER', 'xdg-open')
+            debug(f"Using file manager: {preferred_fm}")
             
-            # Use system paths for known file managers to avoid Nix wrapper issues
-            system_paths = {
-                'thunar': '/run/current-system/sw/bin/thunar',
-                'nautilus': '/run/current-system/sw/bin/nautilus',
-                'dolphin': '/run/current-system/sw/bin/dolphin',
-                'pcmanfm': '/run/current-system/sw/bin/pcmanfm',
-                'nemo': '/run/current-system/sw/bin/nemo',
-                'caja': '/run/current-system/sw/bin/caja',
-            }
-            
-            # Try the configured file manager first using system path
-            if preferred_fm in system_paths:
-                system_path = system_paths[preferred_fm]
-                if os.path.exists(system_path):
-                    try:
-                        debug(f"Trying configured file manager at system path: {system_path}")
-                        subprocess.Popen([system_path, config_path], 
-                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                        debug(f"Successfully launched {preferred_fm} from system path")
+            # Simple approach: just use the configured command
+            try:
+                if preferred_fm == 'xdg-open':
+                    # Use xdg-open
+                    debug(f"Opening config folder with xdg-open")
+                    result = subprocess.run(['xdg-open', config_path], 
+                                          capture_output=True, text=True, timeout=10)
+                    if result.returncode == 0:
+                        debug("Successfully opened config folder with xdg-open")
                         return
-                    except Exception as e:
-                        debug(f"Failed to launch {preferred_fm} from system path: {e}")
+                    else:
+                        debug(f"xdg-open failed: {result.stderr}")
                 else:
-                    debug(f"System path {system_path} does not exist")
-            
-            # Fallback: try shutil.which for the configured file manager
-            if shutil.which(preferred_fm):
-                try:
-                    debug(f"Trying configured file manager via which: {preferred_fm}")
+                    # Use specified file manager
+                    debug(f"Opening config folder with {preferred_fm}")
                     subprocess.Popen([preferred_fm, config_path], 
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    debug(f"Successfully launched {preferred_fm} via which")
+                    debug(f"Successfully launched {preferred_fm}")
                     return
-                except Exception as e:
-                    debug(f"Failed to launch {preferred_fm} via which: {e}")
-            
-            # Fallback to other file managers using system paths first
-            fallback_managers = ['thunar', 'nautilus', 'dolphin', 'pcmanfm', 'nemo', 'caja']
-            if preferred_fm in fallback_managers:
-                fallback_managers.remove(preferred_fm)
-            
-            for fm in fallback_managers:
-                # Try system path first
-                if fm in system_paths:
-                    system_path = system_paths[fm]
-                    if os.path.exists(system_path):
-                        try:
-                            debug(f"Trying fallback file manager at system path: {system_path}")
-                            subprocess.Popen([system_path, config_path], 
-                                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                            debug(f"Successfully launched {fm} from system path")
-                            return
-                        except Exception as e:
-                            debug(f"Failed to launch {fm} from system path: {e}")
-                            continue
-                
-                # Try via which as fallback
-                if shutil.which(fm):
-                    try:
-                        debug(f"Trying fallback file manager via which: {fm}")
-                        subprocess.Popen([fm, config_path], 
-                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                        debug(f"Successfully launched {fm} via which")
-                        return
-                    except Exception as e:
-                        debug(f"Failed to launch {fm} via which: {e}")
-                        continue
-            
-            # If no GUI file managers worked, try xdg-open
-            debug("No GUI file managers found, trying xdg-open")
-            try:
-                result = subprocess.run(['xdg-open', config_path], 
-                                      capture_output=True, text=True, timeout=5)
-                if result.returncode == 0:
-                    debug("Successfully opened config folder with xdg-open")
-                    return
-                else:
-                    debug(f"xdg-open failed: {result.stderr}")
             except Exception as e:
-                debug(f"xdg-open failed: {e}")
+                debug(f"Failed to open with {preferred_fm}: {e}")
             
-            # Last resort: print path to console
+            # Fallback: print path to console
             print(f"Config folder: {config_path}")
-            debug("All file manager attempts failed, showing path in console")
+            debug("Showing config path in console as fallback")
             
         except Exception as e:
             error_msg = f"Failed to open config folder: {e}"
