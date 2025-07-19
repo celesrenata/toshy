@@ -475,28 +475,15 @@ class ToolsPanel(Gtk.Box):
         debug(f"Opening config folder: {config_path}")
         
         try:
-            # Try multiple approaches to open the folder
+            # Check if config folder exists
             import os
             if not os.path.exists(config_path):
                 error_msg = f"Config folder does not exist: {config_path}"
                 debug(error_msg)
-                # Use simple print instead of notification to avoid crashes
                 print(f"ERROR: {error_msg}")
                 return
             
-            # Try xdg-open first (most universal)
-            try:
-                result = subprocess.run(['xdg-open', config_path], 
-                                      capture_output=True, text=True, timeout=5)
-                if result.returncode == 0:
-                    debug("Successfully opened config folder with xdg-open")
-                    return
-                else:
-                    debug(f"xdg-open failed: {result.stderr}")
-            except Exception as e:
-                debug(f"xdg-open failed: {e}")
-            
-            # Try desktop-specific file managers
+            # Try desktop-specific file managers first (more reliable than xdg-open)
             file_managers = [
                 ['nautilus', config_path],      # GNOME
                 ['dolphin', config_path],       # KDE
@@ -508,14 +495,28 @@ class ToolsPanel(Gtk.Box):
             
             for fm_cmd in file_managers:
                 try:
+                    # Check if the file manager exists first
+                    if not shutil.which(fm_cmd[0]):
+                        continue
+                        
                     subprocess.Popen(fm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     debug(f"Successfully opened config folder with {fm_cmd[0]}")
                     return
-                except FileNotFoundError:
-                    continue
                 except Exception as e:
                     debug(f"Failed to open with {fm_cmd[0]}: {e}")
                     continue
+            
+            # Only try xdg-open as last resort if no specific file manager worked
+            try:
+                result = subprocess.run(['xdg-open', config_path], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    debug("Successfully opened config folder with xdg-open")
+                    return
+                else:
+                    debug(f"xdg-open failed: {result.stderr}")
+            except Exception as e:
+                debug(f"xdg-open failed: {e}")
             
             # Last resort: print path to console
             print(f"Config folder: {config_path}")
