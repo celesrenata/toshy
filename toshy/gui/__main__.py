@@ -37,10 +37,10 @@ def main():
         from .main_tkinter import main as tkinter_main
         tkinter_main()
     else:
-        # Default to tkinter for better compatibility
-        debug("Launching tkinter version...")
-        from .main_tkinter import main as tkinter_main
-        tkinter_main()
+        # Default to GTK4 for modern beautiful UI
+        debug("Launching GTK-4 version...")
+        from .main_gtk4 import main as gtk4_main
+        gtk4_main()
 
 
 if __name__ == "__main__":

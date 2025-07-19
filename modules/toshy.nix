@@ -360,8 +360,13 @@ in {
         DISPLAY = ":0";
         # XDG_RUNTIME_DIR is automatically set by systemd for user services
         
-        # Add procps to PATH for pgrep/pkill commands needed by configuration
-        PATH = mkForce "${pkgs.procps}/bin:/etc/profiles/per-user/${cfg.user}/bin:/run/current-system/sw/bin";
+        # Add procps and libnotify to PATH for system commands needed by configuration and GUI
+        PATH = mkForce "${pkgs.procps}/bin:${pkgs.libnotify}/bin:/etc/profiles/per-user/${cfg.user}/bin:/run/current-system/sw/bin";
+        
+        # GTK4 environment variables for GUI
+        GI_TYPELIB_PATH = "${pkgs.gtk4}/lib/girepository-1.0:${pkgs.libadwaita}/lib/girepository-1.0:${pkgs.gobject-introspection}/lib/girepository-1.0";
+        XDG_DATA_DIRS = "${pkgs.gtk4}/share:${pkgs.libadwaita}/share:${pkgs.gsettings-desktop-schemas}/share";
+        GSK_RENDERER = "gl"; # Use OpenGL renderer for better performance
       } // optionalAttrs cfg.wayland.enable {
         WAYLAND_DISPLAY = "wayland-1";  # Match actual socket name
         XDG_SESSION_TYPE = "wayland";

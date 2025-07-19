@@ -114,10 +114,13 @@
 
           buildInputs = with pkgs; [
             gtk3
+            gtk4  # Add GTK4 for modern GUI
             gobject-introspection
             libappindicator-gtk3  # For system tray support
             libayatana-appindicator # Alternative AppIndicator implementation
             libnotify # For notify-send command
+            libadwaita # Modern GTK4 styling
+            gsettings-desktop-schemas # GTK4 schemas
           ];
 
           propagatedBuildInputs = with python.pkgs; [
