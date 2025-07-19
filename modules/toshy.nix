@@ -134,6 +134,13 @@ in {
         default = true;
         description = "Automatically start GUI components with desktop session";
       };
+      
+      fileManager = mkOption {
+        type = types.str;
+        default = "thunar";
+        description = "Default file manager for opening config folder";
+        example = "nautilus";
+      };
     };
     
     keybindings = {
@@ -417,6 +424,7 @@ in {
         DISPLAY = ":0";
         XDG_RUNTIME_DIR = "/run/user/1000";  # Use actual user ID instead of %i
         TOSHY_THEME = cfg.gui.theme;
+        TOSHY_FILE_MANAGER = cfg.gui.fileManager;
         # Wayland display for GTK4
         WAYLAND_DISPLAY = "wayland-1";
         XDG_SESSION_TYPE = "wayland";

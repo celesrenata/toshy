@@ -483,29 +483,50 @@ class ToolsPanel(Gtk.Box):
                 print(f"ERROR: {error_msg}")
                 return
             
-            # Try GUI file managers only (no terminal-based ones)
-            file_managers = [
-                ['nautilus', config_path],      # GNOME
-                ['dolphin', config_path],       # KDE
-                ['thunar', config_path],        # XFCE
-                ['pcmanfm', config_path],       # LXDE
-                ['nemo', config_path],          # Cinnamon
-                ['caja', config_path],          # MATE
-            ]
+            # Check for configured file manager from environment
+            preferred_fm = os.environ.get('TOSHY_FILE_MANAGER', 'thunar')
+            debug(f"Preferred file manager from config: {preferred_fm}")
             
-            for fm_cmd in file_managers:
+            # Try the configured file manager first
+            if shutil.which(preferred_fm):
                 try:
-                    # Check if the file manager exists first
-                    if not shutil.which(fm_cmd[0]):
-                        debug(f"File manager {fm_cmd[0]} not found")
-                        continue
-                        
-                    debug(f"Trying to open config folder with {fm_cmd[0]}")
-                    subprocess.Popen(fm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    debug(f"Successfully launched {fm_cmd[0]}")
+                    debug(f"Trying configured file manager: {preferred_fm}")
+                    subprocess.Popen([preferred_fm, config_path], 
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    debug(f"Successfully launched {preferred_fm}")
                     return
                 except Exception as e:
-                    debug(f"Failed to open with {fm_cmd[0]}: {e}")
+                    debug(f"Failed to launch {preferred_fm}: {e}")
+            else:
+                debug(f"Configured file manager {preferred_fm} not found")
+            
+            # Fallback to other GUI file managers
+            file_managers = [
+                'nautilus',     # GNOME
+                'dolphin',      # KDE
+                'thunar',       # XFCE
+                'pcmanfm',      # LXDE
+                'nemo',         # Cinnamon
+                'caja',         # MATE
+            ]
+            
+            # Remove the preferred one from fallbacks to avoid trying twice
+            if preferred_fm in file_managers:
+                file_managers.remove(preferred_fm)
+            
+            for fm in file_managers:
+                try:
+                    if not shutil.which(fm):
+                        debug(f"File manager {fm} not found")
+                        continue
+                        
+                    debug(f"Trying fallback file manager: {fm}")
+                    subprocess.Popen([fm, config_path], 
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    debug(f"Successfully launched {fm}")
+                    return
+                except Exception as e:
+                    debug(f"Failed to launch {fm}: {e}")
                     continue
             
             # If no GUI file managers worked, try xdg-open
@@ -521,7 +542,7 @@ class ToolsPanel(Gtk.Box):
             except Exception as e:
                 debug(f"xdg-open failed: {e}")
             
-            # Last resort: print path to console and show in notification if possible
+            # Last resort: print path to console
             print(f"Config folder: {config_path}")
             debug("All file manager attempts failed, showing path in console")
             
