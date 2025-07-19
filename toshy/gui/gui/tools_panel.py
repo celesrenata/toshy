@@ -487,23 +487,24 @@ class ToolsPanel(Gtk.Box):
             preferred_fm = os.environ.get('TOSHY_FILE_MANAGER', 'xdg-open')
             debug(f"Using file manager: {preferred_fm}")
             
-            # Simple approach: just use the configured command
+            # Use async approach to avoid freezing the GUI
             try:
                 if preferred_fm == 'xdg-open':
-                    # Use xdg-open
-                    debug(f"Opening config folder with xdg-open")
-                    result = subprocess.run(['xdg-open', config_path], 
-                                          capture_output=True, text=True, timeout=10)
-                    if result.returncode == 0:
-                        debug("Successfully opened config folder with xdg-open")
-                        return
-                    else:
-                        debug(f"xdg-open failed: {result.stderr}")
+                    # Use xdg-open with short timeout and async
+                    debug(f"Opening config folder with xdg-open (async)")
+                    subprocess.Popen(['xdg-open', config_path], 
+                                   stdout=subprocess.DEVNULL, 
+                                   stderr=subprocess.DEVNULL,
+                                   start_new_session=True)
+                    debug("Successfully launched xdg-open")
+                    return
                 else:
-                    # Use specified file manager
-                    debug(f"Opening config folder with {preferred_fm}")
+                    # Use specified file manager (async)
+                    debug(f"Opening config folder with {preferred_fm} (async)")
                     subprocess.Popen([preferred_fm, config_path], 
-                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                                   stdout=subprocess.DEVNULL, 
+                                   stderr=subprocess.DEVNULL,
+                                   start_new_session=True)
                     debug(f"Successfully launched {preferred_fm}")
                     return
             except Exception as e:
