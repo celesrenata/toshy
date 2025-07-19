@@ -56,8 +56,13 @@ class ToshyTrayGTK4:
     
     def create_application(self):
         """Create GTK4 application"""
-        self.app = Adw.Application(application_id="com.toshy.tray")
+        # Use a unique application ID and set it as a service
+        self.app = Adw.Application(application_id="com.toshy.tray.gtk4")
         self.app.connect("activate", self.on_activate)
+        
+        # Set application flags for background service
+        self.app.set_flags(Gio.ApplicationFlags.IS_SERVICE | Gio.ApplicationFlags.ALLOW_REPLACEMENT)
+        
         return self.app
     
     def on_activate(self, app):
@@ -138,10 +143,15 @@ class ToshyTrayGTK4:
             debug("GTK4 Tray: Starting application...")
             app = self.create_application()
             
-            # Run in background mode (no main window)
-            app.set_flags(Gio.ApplicationFlags.IS_SERVICE)
-            
-            return app.run(sys.argv)
+            # Handle registration failure gracefully
+            try:
+                return app.run(sys.argv)
+            except GLib.Error as e:
+                if "Unable to acquire bus name" in str(e):
+                    info("GTK4 Tray: Another instance may be running, exiting gracefully")
+                    return 0
+                else:
+                    raise
             
         except Exception as e:
             error(f"GTK4 Tray: Failed to run: {e}")
