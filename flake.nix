@@ -114,6 +114,9 @@
           buildInputs = with pkgs; [
             gtk3
             gobject-introspection
+            libappindicator-gtk3  # For system tray support
+            libayatana-appindicator # Alternative AppIndicator implementation
+            libnotify # For notify-send command
           ];
 
           propagatedBuildInputs = with python.pkgs; [

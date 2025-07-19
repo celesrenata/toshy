@@ -329,7 +329,7 @@ in {
           "/home/${cfg.user}/.config/toshy"
           "/home/${cfg.user}/.local/share/toshy"
           "/home/${cfg.user}/.cache/toshy"
-          "/run/user/%i"
+          # XDG_RUNTIME_DIR access is handled automatically by systemd user services
         ] ++ optionals (cfg.logging.file != null) [
           (dirOf cfg.logging.file)
         ];
@@ -342,7 +342,8 @@ in {
         CPUQuota = cfg.performance.cpuQuota;
       } // optionalAttrs (!cfg.security.restrictedMode) {
         # Additional permissions for full functionality
-        SupplementaryGroups = [ "input" ];
+        # Note: SupplementaryGroups not supported in user services
+        # User should be added to input group via users.users.${user}.extraGroups
       };
       
       environment = {
@@ -350,14 +351,18 @@ in {
         TOSHY_LOG_LEVEL = cfg.logging.level;
         TOSHY_USER = cfg.user;
         
-        # Display environment
-        DISPLAY = ":0";
-        XDG_RUNTIME_DIR = "/run/user/%i";
+        # GUI-specific environment
+        TOSHY_DATA_DIR = "/home/${cfg.user}/.local/share/toshy";
+        XDG_DATA_HOME = "/home/${cfg.user}/.local/share";
+        XDG_CONFIG_HOME = "/home/${cfg.user}/.config";
         
-        # Path configuration
-        PATH = "/run/wrappers/bin:/home/${cfg.user}/.nix-profile/bin:/etc/profiles/per-user/${cfg.user}/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin";
+        # Display environment  
+        DISPLAY = ":0";
+        # XDG_RUNTIME_DIR is automatically set by systemd for user services
+        
+        # Note: PATH is handled by systemd automatically, no need to set it explicitly
       } // optionalAttrs cfg.wayland.enable {
-        WAYLAND_DISPLAY = "wayland-0";
+        WAYLAND_DISPLAY = "wayland-1";  # Match actual socket name
         XDG_SESSION_TYPE = "wayland";
       } // optionalAttrs cfg.x11.enable {
         XDG_SESSION_TYPE = "x11";
@@ -416,6 +421,9 @@ in {
         Restart = "on-failure";
         RestartSec = 10;
         
+        # Add notify-send to PATH
+        Environment = "PATH=${pkgs.libnotify}/bin:/etc/profiles/per-user/${cfg.user}/bin:/run/current-system/sw/bin";
+        
         # Security settings
         NoNewPrivileges = true;
         PrivateTmp = true;
@@ -453,18 +461,8 @@ in {
       extraGroups = [ "input" ] ++ optionals (!cfg.security.restrictedMode) [ "audio" ];
     };
     
-    # Udev rules for device access
-    services.udev.extraRules = mkIf (!cfg.security.restrictedMode) ''
-      # Allow input group to access input devices
-      KERNEL=="event*", GROUP="input", MODE="0664"
-      SUBSYSTEM=="input", GROUP="input", MODE="0664"
-      
-      # Allow access to hidraw devices for special keyboards
-      KERNEL=="hidraw*", GROUP="input", MODE="0664"
-      
-      # Special handling for specific devices
-      SUBSYSTEM=="usb", ATTRS{idVendor}=="05ac", GROUP="input", MODE="0664"  # Apple devices
-    '';
+    # Note: Udev rules removed to avoid system conflicts
+    # Users should ensure they're in the 'input' group manually if needed
     
     # Enable required services based on configuration
     services.xserver.enable = mkIf cfg.x11.enable true;
