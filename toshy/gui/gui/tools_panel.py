@@ -483,30 +483,33 @@ class ToolsPanel(Gtk.Box):
                 print(f"ERROR: {error_msg}")
                 return
             
-            # Try desktop-specific file managers first (more reliable than xdg-open)
+            # Try GUI file managers only (no terminal-based ones)
             file_managers = [
                 ['nautilus', config_path],      # GNOME
                 ['dolphin', config_path],       # KDE
                 ['thunar', config_path],        # XFCE
                 ['pcmanfm', config_path],       # LXDE
                 ['nemo', config_path],          # Cinnamon
-                ['ranger', config_path],        # Terminal file manager
+                ['caja', config_path],          # MATE
             ]
             
             for fm_cmd in file_managers:
                 try:
                     # Check if the file manager exists first
                     if not shutil.which(fm_cmd[0]):
+                        debug(f"File manager {fm_cmd[0]} not found")
                         continue
                         
+                    debug(f"Trying to open config folder with {fm_cmd[0]}")
                     subprocess.Popen(fm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    debug(f"Successfully opened config folder with {fm_cmd[0]}")
+                    debug(f"Successfully launched {fm_cmd[0]}")
                     return
                 except Exception as e:
                     debug(f"Failed to open with {fm_cmd[0]}: {e}")
                     continue
             
-            # Only try xdg-open as last resort if no specific file manager worked
+            # If no GUI file managers worked, try xdg-open
+            debug("No GUI file managers found, trying xdg-open")
             try:
                 result = subprocess.run(['xdg-open', config_path], 
                                       capture_output=True, text=True, timeout=5)
@@ -518,9 +521,9 @@ class ToolsPanel(Gtk.Box):
             except Exception as e:
                 debug(f"xdg-open failed: {e}")
             
-            # Last resort: print path to console
+            # Last resort: print path to console and show in notification if possible
             print(f"Config folder: {config_path}")
-            debug("Showed config path in console as fallback")
+            debug("All file manager attempts failed, showing path in console")
             
         except Exception as e:
             error_msg = f"Failed to open config folder: {e}"
