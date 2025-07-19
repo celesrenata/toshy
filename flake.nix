@@ -7,9 +7,34 @@
   };
 
   outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
+    flake-utils.lib.eachSystem [ 
+      "x86_64-linux" 
+      "aarch64-linux"
+      # Note: macOS support would require significant changes to xwaykeyz
+      # "x86_64-darwin" 
+      # "aarch64-darwin"
+    ] (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        lib = nixpkgs.lib;
+        
+        # Platform-specific configurations
+        platformConfig = {
+          x86_64-linux = {
+            # Optimizations for x86_64
+            enableOptimizations = true;
+            supportedCompositors = [ "hyprland" "sway" "wlroots" "gnome" "kde" ];
+            supportedWindowManagers = [ "i3" "bspwm" "xmonad" "gnome" "kde" "xfce" ];
+          };
+          aarch64-linux = {
+            # ARM-specific optimizations
+            enableOptimizations = false; # More conservative for ARM
+            supportedCompositors = [ "sway" "wlroots" "gnome" ];
+            supportedWindowManagers = [ "i3" "gnome" "xfce" ];
+          };
+        };
+        
+        currentPlatform = platformConfig.${system} or platformConfig.x86_64-linux;
         python = pkgs.python3;
         
         # Custom python-xlib 0.31 to avoid conflicts
@@ -176,6 +201,9 @@
             python3Packages.black
             python3Packages.flake8
             
+            # Performance monitoring
+            python3Packages.psutil
+            
             # Development tools
             nixpkgs-fmt
             git
@@ -184,11 +212,23 @@
             gtk3
             gobject-introspection
             pkg-config
+            
+            # Cross-compilation tools
+            gcc
+            binutils
+          ] ++ lib.optionals (system == "x86_64-linux") [
+            # x86_64 specific tools
+            gdb
+            valgrind
+          ] ++ lib.optionals (system == "aarch64-linux") [
+            # ARM specific tools
+            # Add ARM-specific debugging tools if needed
           ];
 
           shellHook = ''
-            echo "Toshy development environment"
+            echo "Toshy development environment (${system})"
             echo "Python: $(python --version)"
+            echo "Platform: ${builtins.concatStringsSep ", " currentPlatform.supportedCompositors}"
             echo ""
             echo "Available commands:"
             echo "  - nixpkgs-fmt: Format Nix files"
@@ -198,10 +238,19 @@
             echo "  - black: Format Python code"
             echo "  - flake8: Lint Python code"
             echo ""
+            echo "New Phase 4 tools:"
+            echo "  - toshy-platform: Platform detection"
+            echo "  - toshy-debug: Comprehensive diagnostics"
+            echo "  - toshy-performance: Performance monitoring"
+            echo ""
             echo "Testing:"
             echo "  - pytest tests/: Run all tests"
             echo "  - pytest tests/test_config.py: Run specific test file"
             echo "  - pytest --cov=toshy tests/: Run tests with coverage"
+            echo ""
+            echo "Cross-compilation:"
+            echo "  - nix build .#packages.aarch64-linux.toshy: Build for ARM64"
+            echo "  - nix flake check --all-systems: Check all platforms"
           '';
         };
 

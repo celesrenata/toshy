@@ -11,6 +11,7 @@ import subprocess
 import time
 import signal
 from pathlib import Path
+from .platform_utils import get_platform_detector
 
 def find_config_file():
     """Find the Toshy configuration file"""
@@ -101,6 +102,20 @@ def setup_x11_permissions():
 def main():
     """Main entry point for toshy-daemon command"""
     print("Toshy daemon starting...")
+    
+    # Get platform information
+    detector = get_platform_detector()
+    platform_info = detector.get_platform_info()
+    
+    print(f"Platform: {platform_info['architecture']}")
+    print(f"Display: {platform_info['display_server']}")
+    if platform_info['wayland_compositor']:
+        print(f"Compositor: {platform_info['wayland_compositor']}")
+    
+    # Apply platform-specific optimizations
+    recommended = platform_info['recommended_settings']
+    if not recommended['enable_optimizations']:
+        print("Running in compatibility mode for this platform")
     
     # Check if xwaykeyz is available
     try:

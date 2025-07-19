@@ -82,6 +82,9 @@ toshy-gui = "toshy.layout_selector:main"
 toshy-config = "toshy.config:main"
 toshy-daemon = "toshy.daemon:main"
 toshy-config-generator = "toshy.config_generator:main"
+toshy-platform = "toshy.platform_utils:main"
+toshy-debug = "toshy.debug_utils:main"
+toshy-performance = "toshy.performance_utils:main"
 
 [tool.setuptools]
 py-modules = ["toshy_tray", "toshy_layout_selector"]
