@@ -17,16 +17,16 @@ import subprocess
 from subprocess import DEVNULL
 
 # Initialize Toshy runtime before other imports
-from toshy_common.runtime_utils import initialize_toshy_runtime
+from toshy.common.runtime_utils import initialize_toshy_runtime
 runtime = initialize_toshy_runtime()
 
 # Local imports
-from toshy_common import logger
-from toshy_common.logger import *
-from toshy_common.settings_class import Settings
-from toshy_common.process_manager import ProcessManager
-from toshy_common.service_manager import ServiceManager
-from toshy_common.monitoring import SettingsMonitor, ServiceMonitor
+from toshy.common import logger
+from toshy.common.logger import *
+from toshy.common.settings_class import Settings
+from toshy.common.process_manager import ProcessManager
+from toshy.common.service_manager import ServiceManager
+from toshy.common.monitoring import SettingsMonitor, ServiceMonitor
 
 # Make process manager global
 process_mgr = None
@@ -62,7 +62,7 @@ debug("")
 debug(cnfg)   # prints out the __str__ method of Settings class
 
 # Notification handler object setup
-from toshy_common.notification_manager import NotificationManager
+from toshy.common.notification_manager import NotificationManager
 ntfy = NotificationManager(icon_file_active, title='Toshy Alert (GUI)')
 
 # Service manager instance
