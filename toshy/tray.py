@@ -8,14 +8,21 @@ import sys
 def main():
     """Main entry point for toshy-tray command"""
     try:
-        # Import and run the original tray script
-        import toshy_tray
-        toshy_tray.main()
+        # Use the new GTK4 tray implementation
+        from toshy.tray_gtk4 import main as gtk4_main
+        return gtk4_main()
     except ImportError as e:
-        print(f"Error importing toshy_tray: {e}", file=sys.stderr)
-        sys.exit(1)
+        print(f"Error importing GTK4 tray: {e}", file=sys.stderr)
+        print("Falling back to original tray...", file=sys.stderr)
+        try:
+            # Fallback to original tray if GTK4 fails
+            import toshy_tray
+            toshy_tray.main()
+        except ImportError as e2:
+            print(f"Error importing toshy_tray: {e2}", file=sys.stderr)
+            sys.exit(1)
     except Exception as e:
-        print(f"Error running toshy tray: {e}", file=sys.stderr)
+        print(f"Error running GTK4 tray: {e}", file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":

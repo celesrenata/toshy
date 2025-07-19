@@ -447,10 +447,10 @@ in {
         # Add notify-send to PATH
         Environment = "PATH=${pkgs.libnotify}/bin:${pkgs.procps}/bin:${pkgs.coreutils}/bin:/etc/profiles/per-user/${cfg.user}/bin:/run/current-system/sw/bin";
         
-        # Security settings
-        NoNewPrivileges = true;
-        PrivateTmp = true;
-        ProtectSystem = "strict";
+        # Security settings - relaxed for tray GTK compatibility
+        NoNewPrivileges = false;  # GTK needs this
+        PrivateTmp = false;       # GTK needs access to tmp
+        ProtectSystem = "false";  # GTK needs system access
         ProtectHome = false;
         
         # Resource limits
@@ -460,10 +460,17 @@ in {
       
       environment = {
         DISPLAY = ":0";
-        XDG_RUNTIME_DIR = "/run/user/%i";
+        XDG_RUNTIME_DIR = "/run/user/1000";  # Use actual user ID
         TOSHY_THEME = cfg.gui.theme;
+        # Wayland display for GTK
+        WAYLAND_DISPLAY = "wayland-1";
+        XDG_SESSION_TYPE = "wayland";
+        # GTK backend preference - try GTK3 first for tray compatibility
+        GDK_BACKEND = "x11,wayland";
+        # Fix dconf permissions
+        DCONF_USER_CONFIG_DIR = "/home/${cfg.user}/.config/dconf";
       } // optionalAttrs cfg.wayland.enable {
-        WAYLAND_DISPLAY = "wayland-0";
+        WAYLAND_DISPLAY = "wayland-1";
       };
     };
     
