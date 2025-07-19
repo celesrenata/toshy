@@ -395,6 +395,9 @@ in {
         Restart = "on-failure";
         RestartSec = 10;
         
+        # Add notify-send to PATH
+        Environment = "PATH=${pkgs.libnotify}/bin:${pkgs.procps}/bin:${pkgs.coreutils}/bin:/etc/profiles/per-user/${cfg.user}/bin:/run/current-system/sw/bin";
+        
         # Security settings
         NoNewPrivileges = true;
         PrivateTmp = true;
@@ -431,7 +434,7 @@ in {
         RestartSec = 10;
         
         # Add notify-send to PATH
-        Environment = "PATH=${pkgs.libnotify}/bin:/etc/profiles/per-user/${cfg.user}/bin:/run/current-system/sw/bin";
+        Environment = "PATH=${pkgs.libnotify}/bin:${pkgs.procps}/bin:${pkgs.coreutils}/bin:/etc/profiles/per-user/${cfg.user}/bin:/run/current-system/sw/bin";
         
         # Security settings
         NoNewPrivileges = true;
