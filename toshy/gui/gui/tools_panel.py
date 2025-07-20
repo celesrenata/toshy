@@ -326,6 +326,7 @@ class ToolsPanel(Gtk.Box):
         
     def create_services_log_button(self):
         """Create the show services log button"""
+        print("DEBUG: Creating services log button...")
         container = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         
         button = Gtk.Button(label="Show Services Log")
@@ -333,13 +334,19 @@ class ToolsPanel(Gtk.Box):
         button.set_hexpand(True)  # Make button expand to fill available space
         button.set_valign(Gtk.Align.CENTER)  # Center vertically in container
         button.set_tooltip_text("Open the Toshy systemd services log in a terminal")
+        print("DEBUG: Connecting services log button to handler...")
         button.connect('clicked', self.on_show_services_log)
+        print("DEBUG: Services log button connected successfully")
         
         # Disable button if not using systemd
+        print(f"DEBUG: Checking systemd availability: {self.runtime.is_systemd}")
         if not self.runtime.is_systemd:
             button.set_sensitive(False)
             button.set_tooltip_text("Services log not available (systemd not detected)")
             debug("Services log button disabled - systemd not available")
+            print("DEBUG: Services log button DISABLED - systemd not available")
+        else:
+            print("DEBUG: Services log button ENABLED - systemd available")
         
         container.append(button)
         
