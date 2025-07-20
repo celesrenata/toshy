@@ -471,6 +471,7 @@ class ToolsPanel(Gtk.Box):
 
     def on_open_config_folder(self, button):
         """Handle open config folder button click"""
+        print("BUTTON CLICKED - on_open_config_folder called!")
         config_path = self.runtime.config_dir
         debug(f"Opening config folder: {config_path}")
         
@@ -492,6 +493,7 @@ class ToolsPanel(Gtk.Box):
                 thunar_path = '/run/current-system/sw/bin/thunar'
                 if os.path.exists(thunar_path):
                     debug(f"Opening config folder with system thunar: {thunar_path}")
+                    print(f"Launching system thunar: {thunar_path} {config_path}")
                     subprocess.Popen([thunar_path, config_path], 
                                    stdout=subprocess.DEVNULL, 
                                    stderr=subprocess.DEVNULL,
@@ -500,10 +502,12 @@ class ToolsPanel(Gtk.Box):
                     return
                 else:
                     debug(f"System thunar not found at {thunar_path}")
+                    print(f"System thunar not found at {thunar_path}")
             
             # Fallback for other file managers
             try:
                 debug(f"Opening config folder with {preferred_fm}")
+                print(f"Fallback: launching {preferred_fm}")
                 subprocess.Popen([preferred_fm, config_path], 
                                stdout=subprocess.DEVNULL, 
                                stderr=subprocess.DEVNULL,
@@ -512,6 +516,7 @@ class ToolsPanel(Gtk.Box):
                 return
             except Exception as e:
                 debug(f"Failed to launch {preferred_fm}: {e}")
+                print(f"Failed to launch {preferred_fm}: {e}")
             
             # Fallback: print path to console
             print(f"Config folder: {config_path}")
