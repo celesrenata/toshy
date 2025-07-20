@@ -141,6 +141,13 @@ in {
         description = "Default file manager for opening config folder";
         example = "nautilus";
       };
+      
+      terminal = mkOption {
+        type = types.str;
+        default = "foot";
+        description = "Default terminal emulator for services log";
+        example = "alacritty";
+      };
     };
     
     keybindings = {
@@ -425,6 +432,7 @@ in {
         XDG_RUNTIME_DIR = "/run/user/1000";  # Use actual user ID instead of %i
         TOSHY_THEME = cfg.gui.theme;
         TOSHY_FILE_MANAGER = cfg.gui.fileManager;
+        TOSHY_TERMINAL = cfg.gui.terminal;
         # Wayland display for GTK4
         WAYLAND_DISPLAY = "wayland-1";
         XDG_SESSION_TYPE = "wayland";
