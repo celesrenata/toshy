@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 > The [Toshy] readme is like a phd thesis paper.  
 > -- No_Sandwich3888 on Reddit
 
@@ -702,3 +703,130 @@ Thanks for checking out Toshy!
 
 §  
 
+=======
+# Toshy NixOS Flake Documentation
+
+This repository contains comprehensive documentation for the Toshy NixOS flake implementation. Toshy is a Mac-style keybinding application for Linux that has been modernized from a complex Nix overlay to a clean, maintainable Nix flake.
+
+## Documentation Files
+
+- **[Documentation Guide](./documentation-guide.md)** - Overview of all documentation and how to use it
+- **[Toshy NixOS Flake Context](./toshy-nixos-flake-context.md)** - Comprehensive context for the NixOS flake implementation
+- **[Toshy NixOS Flake Summary](./toshy-nixos-flake-summary.md)** - High-level summary of the implementation
+- **[Toshy NixOS Migration Guide](./toshy-nixos-migration-guide.md)** - Guide for migrating from overlay to flake
+- **[NixOS Flake Best Practices](./nixos-flake-best-practices.md)** - Best practices for creating NixOS flakes
+
+## Quick Start
+
+### For Users
+
+If you want to use Toshy with NixOS:
+
+```nix
+# flake.nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    toshy.url = "github:celesrenata/toshy";
+    toshy.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs = { self, nixpkgs, toshy, ... }: {
+    nixosConfigurations.yourhostname = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        # Import the Toshy NixOS module
+        toshy.nixosModules.default
+        
+        # Your system configuration
+        ({ config, pkgs, ... }: {
+          # Enable Toshy with basic configuration
+          services.toshy = {
+            enable = true;
+            user = "yourusername";  # Replace with your username
+            
+            # Enable GUI components
+            gui = {
+              enable = true;
+              tray = true;
+              theme = "auto";
+            };
+            
+            # Configure keybindings
+            keybindings = {
+              macStyle = true;
+              applications = {
+                "Firefox" = {
+                  "Cmd+T" = "Ctrl+T";  # New tab
+                  "Cmd+W" = "Ctrl+W";  # Close tab
+                };
+              };
+            };
+          };
+        })
+      ];
+    };
+  };
+}
+```
+
+### For Home Manager Users
+
+If you want to use Toshy with Home Manager:
+
+```nix
+# home.nix
+{ config, pkgs, ... }:
+
+{
+  imports = [
+    # Import the Toshy Home Manager module
+    inputs.toshy.homeManagerModules.default
+  ];
+
+  # Enable and configure Toshy
+  services.toshy = {
+    enable = true;
+    
+    settings = {
+      macStyle = true;
+      theme = "dark";
+      autostart = true;
+      
+      applications = {
+        "firefox" = {
+          "Cmd+T" = "Ctrl+T";
+          "Cmd+W" = "Ctrl+W";
+        };
+      };
+    };
+    
+    gui = {
+      enable = true;
+      tray = true;
+    };
+  };
+}
+```
+
+## Key Features
+
+- **Modern Flake Structure** - Clean, maintainable Nix flake
+- **Multi-platform Support** - Support for x86_64-linux and aarch64-linux
+- **NixOS Integration** - Full NixOS module with service management
+- **Home Manager Integration** - User-specific configuration with Home Manager
+- **Development Environment** - Comprehensive development shell
+- **Testing** - Integrated test infrastructure
+
+## For More Information
+
+For more detailed information, please refer to the documentation files listed above. The [Documentation Guide](./documentation-guide.md) provides an overview of all documentation and how to use it.
+
+## Contributing
+
+If you want to contribute to Toshy, please refer to the [Toshy NixOS Flake Context](./toshy-nixos-flake-context.md) for detailed information about the implementation.
+
+## License
+
+Toshy is licensed under the GPL-3.0 license. See the [LICENSE](./LICENSE) file for details.
+>>>>>>> Stashed changes
