@@ -487,7 +487,21 @@ class ToolsPanel(Gtk.Box):
             preferred_fm = os.environ.get('TOSHY_FILE_MANAGER', 'thunar')
             debug(f"Using configured file manager: {preferred_fm}")
             
-            # Use the configured file manager directly
+            # Use absolute path to system thunar to avoid wrapped version
+            if preferred_fm == 'thunar':
+                thunar_path = '/run/current-system/sw/bin/thunar'
+                if os.path.exists(thunar_path):
+                    debug(f"Opening config folder with system thunar: {thunar_path}")
+                    subprocess.Popen([thunar_path, config_path], 
+                                   stdout=subprocess.DEVNULL, 
+                                   stderr=subprocess.DEVNULL,
+                                   start_new_session=True)
+                    debug(f"Successfully launched system thunar")
+                    return
+                else:
+                    debug(f"System thunar not found at {thunar_path}")
+            
+            # Fallback for other file managers
             try:
                 debug(f"Opening config folder with {preferred_fm}")
                 subprocess.Popen([preferred_fm, config_path], 
