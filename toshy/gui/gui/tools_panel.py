@@ -529,8 +529,11 @@ class ToolsPanel(Gtk.Box):
             
     def on_show_services_log(self, button):
         """Handle show services log button click"""
+        print("BUTTON CLICKED - on_show_services_log called!")
+        
         if not self.runtime.is_systemd:
             debug("Services log requested but systemd not available")
+            print("ERROR: systemd not available")
             return
             
         try:
@@ -542,13 +545,16 @@ class ToolsPanel(Gtk.Box):
                 '-f'  # Follow logs
             ]
             debug(f"Opening service logs with command: {' '.join(cmd)}")
+            print(f"Trying to open logs with: {' '.join(cmd)}")
             
             # Try to open in terminal
             success = term_utils.run_cmd_lst_in_terminal(cmd, desktop_env=self.desktop_env)
+            print(f"Terminal launch success: {success}")
             
             if not success:
                 # Fallback: show recent logs without following
                 debug("Terminal launch failed, trying fallback log display")
+                print("Terminal launch failed, trying fallback")
                 fallback_cmd = [
                     'journalctl', '--user', 
                     '-u', 'toshy', '-u', 'toshy-gui', '-u', 'toshy-tray',
@@ -560,6 +566,7 @@ class ToolsPanel(Gtk.Box):
                 if not term_utils.run_cmd_lst_in_terminal(fallback_cmd, desktop_env=self.desktop_env):
                     # Last resort: print to console
                     debug("All terminal attempts failed, showing logs in console")
+                    print("All terminal attempts failed, showing logs in console")
                     try:
                         result = subprocess.run(fallback_cmd, capture_output=True, text=True, timeout=10)
                         if result.returncode == 0:
