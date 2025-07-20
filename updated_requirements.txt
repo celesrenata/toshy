@@ -1,0 +1,28 @@
+# Updated requirements.txt for Toshy
+# This file was manually refined based on import_scanner.py analysis
+
+# Core dependencies
+dbus-python>=1.2.16
+pillow>=9.0.0
+psutil>=5.9.0
+pygobject<=3.44.1
+pywayland>=0.4.14
+watchdog>=2.1.9
+xkbcommon<1.1
+
+# Version-specific dependencies
+python-xlib==0.31  # Pinned for compatibility
+
+# Optional dependencies
+sv-ttk; sys.version_info >= (3, 10)  # For modern theming in Tkinter
+
+# Note: Many imports detected by the scanner are actually part of the pywayland ecosystem
+# and are not separate packages. They are included through the pywayland dependency.
+
+# Note: The following packages are part of the local codebase or are provided by
+# the system's package manager (not pip-installable):
+# - cosmic_workspace_unstable_v1
+# - ext_foreign_toplevel_*
+# - wl_*
+# - zcosmic_*
+# - zwlr_*

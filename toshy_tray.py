@@ -131,7 +131,7 @@ tray_indicator.set_title("Toshy Status Indicator") # try to set what might show 
 
 def fn_open_preferences(widget):
     # First check if toshy-gui exists
-    toshy_gui_cmd = shutil.which('toshy-gui')
+    toshy_gui_cmd = shutil.which("toshy-gui")
     if not toshy_gui_cmd:
         _ntfy_icon = icon_file_inverse
         _ntfy_msg = ("The 'toshy-gui' utility is missing.\r"
@@ -172,7 +172,7 @@ def fn_open_preferences(widget):
 
 def fn_open_config_folder(widget):
 
-    xdg_open_cmd = shutil.which('xdg-open')
+    xdg_open_cmd = shutil.which("xdg-open")
     if not xdg_open_cmd:
         _ntfy_icon = icon_file_inverse
         _ntfy_msg = ("The 'xdg-open' utility is missing.\r"
@@ -184,7 +184,7 @@ def fn_open_config_folder(widget):
         return
 
     # Sometimes xdg-open script is unpatched for Plasma 6 (e.g., Leap 16), so use kde-open instead
-    kde_open_cmd = shutil.which('kde-open')
+    kde_open_cmd = shutil.which("kde-open")
     if DESKTOP_ENV == 'kde' and DE_MAJ_VER == '6' and kde_open_cmd:
         xdg_open_cmd = kde_open_cmd
 
@@ -210,7 +210,7 @@ def fn_remove_tray_icon(widget):
     global loop
     process_mgr.remove_lockfile()
     loop.quit()
-    pkill_cmd = shutil.which('pkill')
+    pkill_cmd = shutil.which("pkill")
     os.system(f'{pkill_cmd} -f "toshy_tray.py"')
     # Gtk.main_quit()
     sys.exit(0)
@@ -250,7 +250,7 @@ if runtime.is_systemd:
 def is_service_enabled(service_name):
     """Check if a user service is enabled using systemctl."""
 
-    if shutil.which('systemctl') and runtime.is_systemd:
+    if shutil.which("systemctl") and runtime.is_systemd:
         pass
     else:
         # If either 'systemctl' is missing or init is not 'systemd', just return False
@@ -274,7 +274,7 @@ def fn_toggle_toshy_svcs_autostart(widget):
     """Check the status of Toshy services, flip the status, change the menu item label"""
     global toshy_svc_config_unit_enabled, toshy_svc_sessmon_unit_enabled
 
-    if shutil.which('systemctl') and runtime.is_systemd:
+    if shutil.which("systemctl") and runtime.is_systemd:
         pass
     else:
         # If either 'systemctl' is missing or init is not 'systemd', immediately return
@@ -629,7 +629,7 @@ def main():
     settings_monitor = SettingsMonitor(cnfg, on_settings_changed)
     service_monitor = ServiceMonitor(on_service_status_changed)
 
-    if shutil.which('systemctl') and runtime.is_systemd:
+    if shutil.which(shutil.which("systemctl")) and runtime.is_systemd:
         # Help out the config file user service - only import existing env vars
         env_vars_to_check = [
             "KDE_SESSION_VERSION",

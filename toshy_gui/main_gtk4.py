@@ -30,7 +30,7 @@ def is_a11y_available():
         # D-Bus query to check whether a11y support is present:
         # gdbus introspect --session --dest org.a11y.Bus --object-path /org/a11y/bus
         result = subprocess.run([
-            'gdbus', 'introspect', '--session',
+            shutil.which("gdbus"), 'introspect', '--session',
             '--dest', 'org.a11y.Bus',
             '--object-path', '/org/a11y/bus'
         ], capture_output=True, timeout=2)

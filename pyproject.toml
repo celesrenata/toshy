@@ -1,0 +1,116 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toshy"
+version = "24.12.1"
+description = "Mac-style keybindings for Linux"
+readme = "README.md"
+license = {text = "GPL-3.0-or-later"}
+authors = [
+    {name = "RedBearAK", email = "redbearakgithub@gmail.com"},
+]
+maintainers = [
+    {name = "Celes Renata", email = "celes@celestium.life"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: X11 Applications :: GTK",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Desktop Environment",
+    "Topic :: System :: Hardware :: Hardware Drivers",
+    "Topic :: Utilities",
+]
+requires-python = ">=3.8"
+# Updated dependencies based on updated_requirements.txt
+dependencies = [
+    "dbus-python>=1.2.16",
+    "pillow>=9.0.0",
+    "psutil>=5.9.0",
+    "pygobject<=3.44.1",
+    "pywayland>=0.4.14",
+    "watchdog>=2.1.9",
+    "python-xlib==0.31",
+    "xkbcommon<1.1",
+    "xwaykeyz @ git+https://github.com/RedBearAK/xwaykeyz.git@main",
+]
+
+[project.optional-dependencies]
+gui = [
+    "sv-ttk; sys.version_info >= (3, 10)",
+]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "black",
+    "flake8",
+    "mypy",
+]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+]
+
+[project.urls]
+Homepage = "https://github.com/celesrenata/toshy"
+Repository = "https://github.com/celesrenata/toshy.git"
+Issues = "https://github.com/celesrenata/toshy/issues"
+Documentation = "https://github.com/celesrenata/toshy/wiki"
+
+# CLI entry points - ensure toshy-tray and toshy-gui are properly exposed
+[project.scripts]
+toshy-tray = "toshy.tray:main"
+toshy-gui = "toshy.gui.__main__:main"
+toshy-layout-selector = "toshy.layout_selector:main"
+toshy-config = "toshy.config:main"
+toshy-daemon = "toshy.daemon:main"
+toshy-config-generator = "toshy.config_generator:main"
+toshy-platform = "toshy.platform_utils:main"
+toshy-debug = "toshy.debug_utils:main"
+toshy-performance = "toshy.performance_utils:main"
+
+[tool.setuptools]
+py-modules = ["toshy_tray", "toshy_layout_selector"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["toshy*"]
+
+[tool.setuptools.package-data]
+toshy = [
+    "assets/**/*",
+    "desktop/**/*",
+    "default-toshy-config/**/*",
+    "systemd-user-service-units/**/*",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "frontend: marks tests as frontend tests",
+]

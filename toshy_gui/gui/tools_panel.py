@@ -476,7 +476,7 @@ class ToolsPanel(Gtk.Box):
         
         try:
             # Use xdg-open to open the folder in the default file manager
-            subprocess.Popen(['xdg-open', config_path])
+            subprocess.Popen([shutil.which("xdg-open"), config_path])
         except Exception as e:
             error_msg = f"Failed to open config folder: {e}"
             debug(error_msg)

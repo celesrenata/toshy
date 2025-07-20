@@ -18,29 +18,41 @@ class TerminalNotFoundError(RuntimeError):
     pass
 
 
+
+def discover_available_terminals():
+    """Discover available terminal emulators on the system."""
+    available_terminals = []
+    common_terminals = [
+        ('gnome-terminal',          ['--'],     ['gnome', 'unity', 'cinnamon']     ),
+        ('ptyxis',                  ['--'],     ['gnome', 'unity', 'cinnamon']     ),
+        ('konsole',                 ['-e'],     ['kde']                            ),
+        ('xfce4-terminal',          ['-e'],     ['xfce']                           ),
+        ('mate-terminal',           ['-e'],     ['mate']                           ),
+        ('qterminal',               ['-e'],     ['lxqt']                           ),
+        ('lxterminal',              ['-e'],     ['lxde']                           ),
+        ('terminology',             ['-e'],     ['enlightenment']                  ),
+        ('cosmic-term',             ['-e'],     ['cosmic']                         ),
+        ('io.elementary.terminal',  ['-e'],     ['pantheon']                       ),
+        ('kitty',                   ['-e'],     []                                 ),
+        ('alacritty',               ['-e'],     []                                 ),
+        ('tilix',                   ['-e'],     []                                 ),
+        ('terminator',              ['-e'],     []                                 ),
+        ('xterm',                   ['-e'],     []                                 ),
+        ('rxvt',                    ['-e'],     []                                 ),
+        ('urxvt',                   ['-e'],     []                                 ),
+        ('st',                      ['-e'],     []                                 ),
+        ('kgx',                     ['-e'],     []                                 ),  # GNOME Console
+    ]
+    
+    for terminal_cmd, args_list, de_list in common_terminals:
+        if shutil.which(terminal_cmd):
+            available_terminals.append((terminal_cmd, args_list, de_list))
+    
+    return available_terminals
+
 # List of common terminal emulators in descending order of preference.
 # Each element is a tuple: (command_name, args_list, supported_DEs)
-TERMINAL_APPS = [
-    ('gnome-terminal',          ['--'],     ['gnome', 'unity', 'cinnamon']     ),
-    ('ptyxis',                  ['--'],     ['gnome', 'unity', 'cinnamon']     ),
-    ('konsole',                 ['-e'],     ['kde']                            ),
-    ('xfce4-terminal',          ['-e'],     ['xfce']                           ),
-    ('mate-terminal',           ['-e'],     ['mate']                           ),
-    ('qterminal',               ['-e'],     ['lxqt']                           ),
-    ('lxterminal',              ['-e'],     ['lxde']                           ),
-    ('terminology',             ['-e'],     ['enlightenment']                  ),
-    ('cosmic-term',             ['-e'],     ['cosmic']                         ),
-    ('io.elementary.terminal',  ['-e'],     ['pantheon']                       ),
-    ('kitty',                   ['-e'],     []                                 ),
-    ('alacritty',               ['-e'],     []                                 ),
-    ('tilix',                   ['-e'],     []                                 ),
-    ('terminator',              ['-e'],     []                                 ),
-    ('xterm',                   ['-e'],     []                                 ),
-    ('rxvt',                    ['-e'],     []                                 ),
-    ('urxvt',                   ['-e'],     []                                 ),
-    ('st',                      ['-e'],     []                                 ),
-    ('kgx',                     ['-e'],     []                                 ),  # GNOME Console
-]
+TERMINAL_APPS = discover_available_terminals()
 
 
 def run_cmd_lst_in_terminal(command_list, desktop_env: str=None):

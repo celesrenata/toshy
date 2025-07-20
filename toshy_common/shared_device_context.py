@@ -6,6 +6,7 @@ __version__ = '20250710'
 # the keymapper (xwaykeyz) as a template. [2025-02-25]
 
 import os
+import shutil
 import re
 import abc
 import time
@@ -203,7 +204,7 @@ class DeskflowMonitor(SharedDeviceMonitorInterface):
         """Check if any Deskflow process is running"""
         for process_name in self.process_names:
             try:
-                result = subprocess.run(['pgrep', '-x', process_name], 
+                result = sushutil.which("pgrep")s.run(['pgrep', '-x', process_name], 
                                         capture_output=True, text=True)
                 if result.returncode == 0:
                     return True
@@ -329,7 +330,7 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
         """Check if any Synergy process is running"""
         for process_name in self.process_names:
             try:
-                result = subprocess.run(['pgrep', '-x', process_name], 
+                result = sushutil.which("pgrep")s.run(['pgrep', '-x', process_name], 
                                         capture_output=True, text=True)
                 if result.returncode == 0:
                     return True
@@ -373,7 +374,7 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
         for process_name in self.server_process_names:
             try:
                 # Use -f flag to match full command line arguments
-                result = subprocess.run(['pgrep', '-f', f'(^|/){process_name}.*server'], 
+                result = sushutil.which("pgrep")s.run(['pgrep', '-f', f'(^|/){process_name}.*server'], 
                                         capture_output=True, text=True)
                 if result.returncode == 0:
                     self._server_status = True
@@ -386,7 +387,7 @@ class SynergyMonitor(SharedDeviceMonitorInterface):
         client_only = False
         for process_name in self.client_process_names:
             try:
-                result = subprocess.run(['pgrep', '-f', f'(^|/){process_name}.*client'], 
+                result = sushutil.which("pgrep")s.run(['pgrep', '-f', f'(^|/){process_name}.*client'], 
                                         capture_output=True, text=True)
                 if result.returncode == 0:
                     client_only = True
@@ -452,7 +453,7 @@ class InputLeapMonitor(SharedDeviceMonitorInterface):
         """Check if any Input Leap process is running"""
         for process_name in self.process_names:
             try:
-                result = subprocess.run(['pgrep', '-x', process_name], 
+                result = sushutil.which("pgrep")s.run(['pgrep', '-x', process_name], 
                                         capture_output=True, text=True)
                 if result.returncode == 0:
                     return True
@@ -590,7 +591,7 @@ class BarrierMonitor(SharedDeviceMonitorInterface):
         """Check if any Barrier process is running"""
         for process_name in self.process_names:
             try:
-                result = subprocess.run(['pgrep', '-x', process_name], 
+                result = sushutil.which("pgrep")s.run(['pgrep', '-x', process_name], 
                                       capture_output=True, text=True)
                 if result.returncode == 0:
                     return True

@@ -23,7 +23,7 @@ class NotificationManager:
     def check_p_option():
         """check that notify-send command supports -p flag"""
         try:
-            subprocess.run(['notify-send', '-p'], check=True, capture_output=True)
+            subprocess.run([shutil.which("notify-send"), '-p'], check=True, capture_output=True)
         except subprocess.CalledProcessError as e:
             # Check if the error message contains "Unknown option" for -p flag
             error_output: bytes = e.stderr  # type hint to validate decode()

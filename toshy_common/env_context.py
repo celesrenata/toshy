@@ -318,9 +318,9 @@ class EnvironmentInfo:
             # Deal with archaic distros like antiX that fail to set XDG_SESSION_TYPE
             time.sleep(3)
 
-            xorg_check_p1 = subprocess.Popen(['ps', 'ax'], stdout=subprocess.PIPE)
+            xorg_check_p1 = subprocess.Popen([shutil.which("ps"), 'ax'], stdout=subprocess.PIPE)
             xorg_check_p2 = subprocess.Popen(
-                                        ['grep', '-i', '-c', 'xorg'], 
+                                        [shutil.which("grep"), '-i', '-c', 'xorg'], 
                                         stdin=xorg_check_p1.stdout, 
                                         stdout=subprocess.PIPE)
             xorg_check_p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
@@ -330,9 +330,9 @@ class EnvironmentInfo:
             if xorg_count:
                 self.SESSION_TYPE = 'x11'
 
-            wayland_check_p1 = subprocess.Popen(['ps', 'ax'], stdout=subprocess.PIPE)
+            wayland_check_p1 = subprocess.Popen([shutil.which("ps"), 'ax'], stdout=subprocess.PIPE)
             wayland_check_p2 = subprocess.Popen(
-                                            ['grep', '-i', '-c', 'wayland'], 
+                                            [shutil.which("grep"), '-i', '-c', 'wayland'], 
                                             stdin=wayland_check_p1.stdout, 
                                             stdout=subprocess.PIPE)
             wayland_check_p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.

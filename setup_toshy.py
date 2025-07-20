@@ -174,7 +174,7 @@ do_not_ask_about_path = None
 if home_local_bin in original_PATH_str:
     with open(good_path_tmp_path, 'a') as file:
         file.write('Nothing to see here.')
-    # subprocess.run(['touch', path_good_tmp_path])
+    # subprocess.run([shutil.which("touch"), path_good_tmp_path])
     do_not_ask_about_path = True
 else:
     debug("Home user local bin not part of PATH string.")
@@ -888,7 +888,7 @@ def elevate_privileges():
         # the length of time before `sudo` might demand the password again
         if cnfg.priv_elev_cmd == 'sudo':
             try:
-                subprocess.run(['sudo', '-k'], check=True)
+                subprocess.run([shutil.which("sudo"), '-k'], check=True)
             except subprocess.CalledProcessError as proc_err:
                 error(f"ERROR: 'sudo' found, but 'sudo -k' did not work. Very strange.\n{proc_err}")
 
@@ -1797,7 +1797,7 @@ class PackageInstallDispatcher:
             # Filter out packages that are already installed
             filtered_pkg_lst = []
             for pkg in cnfg.pkgs_for_distro:
-                result = subprocess.run(["rpm", "-q", pkg], stdout=PIPE, stderr=PIPE)
+                result = subprocess.run([shutil.which("rpm"), "-q", pkg], stdout=PIPE, stderr=PIPE)
                 if result.returncode != 0:
                     filtered_pkg_lst.append(pkg)
                 else:
@@ -1830,7 +1830,7 @@ class PackageInstallDispatcher:
             # Filter out packages that are already installed
             filtered_pkg_lst = []
             for pkg in cnfg.pkgs_for_distro:
-                result = subprocess.run(["rpm", "-q", pkg], stdout=PIPE, stderr=PIPE)
+                result = subprocess.run([shutil.which("rpm"), "-q", pkg], stdout=PIPE, stderr=PIPE)
                 if result.returncode != 0:
                     filtered_pkg_lst.append(pkg)
                 else:
@@ -1970,7 +1970,7 @@ class PackageInstallDispatcher:
 
         def is_pkg_installed_pacman(package):
             """utility function to help avoid 'reinstalling' existing packages on Arch"""
-            result = subprocess.run(['pacman', '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
+            result = subprocess.run([shutil.which("pacman"), '-Q', package], stdout=DEVNULL, stderr=DEVNULL)
             return result.returncode == 0
 
         pkgs_to_install = []
@@ -2024,7 +2024,7 @@ class PackageInstallDispatcher:
             """Get set of installed package names from apk"""
             try:
                 # Using universal_newlines for Python 3.6 compatibility
-                result = subprocess.run(['apk', 'list', '--installed', '--manifest'], 
+                result = subprocess.run([shutil.which("apk"), 'list', '--installed', '--manifest'], 
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         universal_newlines=True, check=True)
                 installed_packages = set()
@@ -3635,14 +3635,14 @@ def apply_tweaks_GNOME():
 
 def remove_tweaks_GNOME():
     """Utility function to remove the tweaks applied to GNOME"""
-    subprocess.run(['gsettings', 'reset', 'org.gnome.mutter', 'overlay-key'])
+    subprocess.run([shutil.which("gsettings"), 'reset', 'org.gnome.mutter', 'overlay-key'])
     print(f'Removed tweak to disable GNOME "overlay-key" binding to Meta/Super.')
     
     # gsettings reset org.gnome.desktop.wm.keybindings switch-applications
-    subprocess.run(['gsettings', 'reset', 'org.gnome.desktop.wm.keybindings',
+    subprocess.run([shutil.which("gsettings"), 'reset', 'org.gnome.desktop.wm.keybindings',
                     'switch-applications'])
     # gsettings reset org.gnome.desktop.wm.keybindings switch-group
-    subprocess.run(['gsettings', 'reset', 'org.gnome.desktop.wm.keybindings', 'switch-group'])
+    subprocess.run([shutil.which("gsettings"), 'reset', 'org.gnome.desktop.wm.keybindings', 'switch-group'])
     print(f'Removed tweak to enable more Mac-like task switching')
 
 
@@ -3820,9 +3820,9 @@ def install_coding_font():
 
     cannot_download_font    = False
     if shutil.which('curl'):
-        subprocess.run(['curl', '-Lo', zip_path, font_link], stdout=DEVNULL, stderr=DEVNULL)
+        subprocess.run([shutil.which("curl"), '-Lo', zip_path, font_link], stdout=DEVNULL, stderr=DEVNULL)
     elif shutil.which('wget'):
-        subprocess.run(['wget', '-O', zip_path, font_link], stdout=DEVNULL, stderr=DEVNULL)
+        subprocess.run([shutil.which("wget"), '-O', zip_path, font_link], stdout=DEVNULL, stderr=DEVNULL)
     else:
         error("\nERROR: Neither the 'curl' nor 'wget' utils are available. Cannot download font.")
         cannot_download_font = True
